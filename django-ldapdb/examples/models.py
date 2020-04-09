@@ -8,6 +8,68 @@ import ldapdb.models
 from ldapdb.models import fields
 
 
+class RCLdapUser(ldapdb.models.Model):
+    """
+    Class for representing an LDAP user entry.
+    """
+    rdn_key = 'name'
+
+    # LDAP meta-data
+    base_dn = 'ou=users,dc=example,dc=org'
+    object_classes = ['posixAccount', 'inetOrgPerson']
+    last_modified = fields.DateTimeField(db_column='modifyTimestamp')
+
+    organization = fields.CharField(max_length=128,blank=False,null=False)
+
+    # inetOrgPerson
+    first_name = fields.CharField(db_column='givenName', verbose_name="Prime name")
+    last_name = fields.CharField("Final name", db_column='sn')
+    full_name = fields.CharField(db_column='cn')
+    email = fields.CharField(db_column='mail')
+
+    # posixAccount
+    uid = fields.IntegerField(db_column='uidNumber', unique=True)
+    group = fields.IntegerField(db_column='gidNumber')
+    gecos = fields.CharField(db_column='gecos')
+    home_directory = fields.CharField(db_column='homeDirectory')
+    login_shell = fields.CharField(db_column='loginShell', default='/bin/bash')
+    # username = fields.CharField(db_column='uid', primary_key=True)
+    username = fields.CharField(db_column='uid', primary_key=True)
+
+    @property
+    def organization(self):
+        return self.org
+
+    def __str__(self):
+        return self.username
+
+    def __unicode__(self):
+        return self.full_name
+
+class RCLdapGroup(ldapdb.models.Model):
+    """
+    Class for representing an LDAP group entry.
+    """
+    rdn_key = 'username'
+
+    # LDAP meta-data
+    base_dn = "ou=groups,dc=example,dc=org"
+    object_classes = ['posixGroup']
+
+    # posixGroup attributes
+    gid = fields.IntegerField(db_column='gidNumber', unique=True)
+    name = fields.CharField(db_column='cn', max_length=200, primary_key=True)
+    members = fields.ListField(db_column='memberUid')
+
+    def __str__(self):
+        return self.name
+
+    def __unicode__(self):
+        return self.name
+
+
+
+
 class LdapUser(ldapdb.models.Model):
     """
     Class for representing an LDAP user entry.
@@ -16,6 +78,8 @@ class LdapUser(ldapdb.models.Model):
     base_dn = "ou=people,dc=example,dc=org"
     object_classes = ['posixAccount', 'shadowAccount', 'inetOrgPerson']
     last_modified = fields.DateTimeField(db_column='modifyTimestamp')
+
+    organization = fields.CharField(max_length=128,blank=False,null=False)
 
     # inetOrgPerson
     first_name = fields.CharField(db_column='givenName', verbose_name="Prime name")
@@ -37,6 +101,10 @@ class LdapUser(ldapdb.models.Model):
 
     # shadowAccount
     last_password_change = fields.TimestampField(db_column='shadowLastChange')
+
+    @property
+    def organization(self):
+        return self.org
 
     def __str__(self):
         return self.username
