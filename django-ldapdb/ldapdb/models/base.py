@@ -20,14 +20,13 @@ class Model(django.db.models.base.Model):
     """
     Base class for all LDAP models.
     """
-    # dn = ldapdb_fields.CharField(max_length=200, primary_key=True)
-    dn = ldapdb_fields.CharField(max_length=200)
+    dn = ldapdb_fields.CharField(max_length=200, primary_key=True)
 
     # meta-data
     base_dn = None
     search_scope = ldap.SCOPE_SUBTREE
     object_classes = ['top']
-    rdn_key = None
+    rdn_keys = []
 
     def __init__(self, *args, **kwargs):
         super(Model, self).__init__(*args, **kwargs)
@@ -40,14 +39,10 @@ class Model(django.db.models.base.Model):
         Build the Relative Distinguished Name for this entry.
         """
         bits = []
-        # for field in self._meta.fields:
-        #     if field.db_column and (field.name == self.rdn_key):
-        #         bits.append("%s=%s" % (field.db_column,
-        #                                getattr(self, field.name)))
         for field in self._meta.fields:
-            # print("Meta Field =", field)
-            if field.db_column and field.primary_key:
-                bits.append("%s=%s" % (field.db_column,
+            if field.db_column and self.rdn_keys:
+                if field.name in self.rdn_keys:
+                    bits.append("%s=%s" % (field.db_column,
                                        getattr(self, field.name)))
         if not len(bits):
             raise Exception("Could not build Distinguished Name")
@@ -113,8 +108,6 @@ class Model(django.db.models.base.Model):
         new_dn = self.build_dn()
         updated = False
 
-        # print("old, new", old_dn, new_dn)
-
         # Insertion
         if create:
             # FIXME(rbarrois): This should be handled through a hidden field.
@@ -127,9 +120,6 @@ class Model(django.db.models.base.Model):
                 if change[1] != []
             ]
             new_dn = self.build_dn()
-            # print("hidden", hidden_values)
-            # print("new values", new_values)
-            # print("new_dn", new_dn)
             logger.debug("Creating new LDAP entry %s", new_dn)
             connection.add_s(new_dn, new_values)
 
