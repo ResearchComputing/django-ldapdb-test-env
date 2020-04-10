@@ -905,90 +905,90 @@ class CompositePKTests(BaseTestCase):
         self.assertEqual("cn=Director office+roomNumber=42.01,ou=rooms,dc=example,dc=org", new_room.dn)
 
 
-class AdminTestCase(BaseTestCase):
-    directory = dict([groups, people, foouser, foogroup, bargroup])
-
-    def setUp(self):
-        super(AdminTestCase, self).setUp()
-        self._user = UserFactory(
-            username='test_user',
-            cleartext_password='password',
-            superuser=True,
-        )
-        self.client.login(username="test_user", password="password")
-
-    def test_index(self):
-        response = self.client.get('/admin/examples/')
-        self.assertContains(response, "Ldap groups")
-        self.assertContains(response, "Ldap users")
-
-    def test_group_list(self):
-        response = self.client.get('/admin/examples/ldapgroup/')
-        self.assertContains(response, "Ldap groups")
-        self.assertContains(response, "foogroup")
-        self.assertContains(response, "1000")
-
-        # order by name
-        response = self.client.get('/admin/examples/ldapgroup/?o=1')
-        self.assertContains(response, "Ldap groups")
-        self.assertContains(response, "foogroup")
-        self.assertContains(response, "1000")
-
-        # order by gid
-        response = self.client.get('/admin/examples/ldapgroup/?o=2')
-        self.assertContains(response, "Ldap groups")
-        self.assertContains(response, "foogroup")
-        self.assertContains(response, "1000")
-
-    def test_group_detail(self):
-        response = self.client.get('/admin/examples/ldapgroup/foogroup/', follow=True)
-        self.assertContains(response, "foogroup")
-        self.assertContains(response, "1000")
-
-    def test_group_add(self):
-        response = self.client.post('/admin/examples/ldapgroup/add/',
-                                    {'gid': '1002', 'name': 'wizgroup'})
-        self.assertRedirects(response, '/admin/examples/ldapgroup/')
-        qs = LdapGroup.objects.all()
-        self.assertEqual(qs.count(), 3)
-
-    def test_group_delete(self):
-        response = self.client.post(
-            '/admin/examples/ldapgroup/foogroup/delete/', {'yes': 'post'})
-        self.assertRedirects(response, '/admin/examples/ldapgroup/')
-        qs = LdapGroup.objects.all()
-        self.assertEqual(qs.count(), 1)
-
-    def test_group_search(self):
-        response = self.client.get('/admin/examples/ldapgroup/?q=foo')
-        self.assertContains(response, "Ldap groups")
-        self.assertContains(response, "foogroup")
-        self.assertContains(response, "1000")
-
-    def test_user_list(self):
-        response = self.client.get('/admin/examples/ldapuser/')
-        self.assertContains(response, "Ldap users")
-        self.assertContains(response, "foouser")
-        self.assertContains(response, "2000")
-
-        # order by username
-        response = self.client.get('/admin/examples/ldapuser/?o=1')
-        self.assertContains(response, "Ldap users")
-        self.assertContains(response, "foouser")
-        self.assertContains(response, "2000")
-
-        # order by uid
-        response = self.client.get('/admin/examples/ldapuser/?o=2')
-        self.assertContains(response, "Ldap users")
-        self.assertContains(response, "foouser")
-        self.assertContains(response, "2000")
-
-    def test_user_detail(self):
-        response = self.client.get('/admin/examples/ldapuser/foouser/', follow=True)
-        self.assertContains(response, "foouser")
-        self.assertContains(response, "2000")
-
-    def test_user_delete(self):
-        response = self.client.post('/admin/examples/ldapuser/foouser/delete/',
-                                    {'yes': 'post'})
-        self.assertRedirects(response, '/admin/examples/ldapuser/')
+# class AdminTestCase(BaseTestCase):
+#     directory = dict([groups, people, foouser, foogroup, bargroup])
+#
+#     def setUp(self):
+#         super(AdminTestCase, self).setUp()
+#         self._user = UserFactory(
+#             username='test_user',
+#             cleartext_password='password',
+#             superuser=True,
+#         )
+#         self.client.login(username="test_user", password="password")
+#
+#     def test_index(self):
+#         response = self.client.get('/admin/examples/')
+#         self.assertContains(response, "Ldap groups")
+#         self.assertContains(response, "Ldap users")
+#
+#     def test_group_list(self):
+#         response = self.client.get('/admin/examples/ldapgroup/')
+#         self.assertContains(response, "Ldap groups")
+#         self.assertContains(response, "foogroup")
+#         self.assertContains(response, "1000")
+#
+#         # order by name
+#         response = self.client.get('/admin/examples/ldapgroup/?o=1')
+#         self.assertContains(response, "Ldap groups")
+#         self.assertContains(response, "foogroup")
+#         self.assertContains(response, "1000")
+#
+#         # order by gid
+#         response = self.client.get('/admin/examples/ldapgroup/?o=2')
+#         self.assertContains(response, "Ldap groups")
+#         self.assertContains(response, "foogroup")
+#         self.assertContains(response, "1000")
+#
+#     def test_group_detail(self):
+#         response = self.client.get('/admin/examples/ldapgroup/foogroup/', follow=True)
+#         self.assertContains(response, "foogroup")
+#         self.assertContains(response, "1000")
+#
+#     def test_group_add(self):
+#         response = self.client.post('/admin/examples/ldapgroup/add/',
+#                                     {'gid': '1002', 'name': 'wizgroup'})
+#         self.assertRedirects(response, '/admin/examples/ldapgroup/')
+#         qs = LdapGroup.objects.all()
+#         self.assertEqual(qs.count(), 3)
+#
+#     def test_group_delete(self):
+#         response = self.client.post(
+#             '/admin/examples/ldapgroup/foogroup/delete/', {'yes': 'post'})
+#         self.assertRedirects(response, '/admin/examples/ldapgroup/')
+#         qs = LdapGroup.objects.all()
+#         self.assertEqual(qs.count(), 1)
+#
+#     def test_group_search(self):
+#         response = self.client.get('/admin/examples/ldapgroup/?q=foo')
+#         self.assertContains(response, "Ldap groups")
+#         self.assertContains(response, "foogroup")
+#         self.assertContains(response, "1000")
+#
+#     def test_user_list(self):
+#         response = self.client.get('/admin/examples/ldapuser/')
+#         self.assertContains(response, "Ldap users")
+#         self.assertContains(response, "foouser")
+#         self.assertContains(response, "2000")
+#
+#         # order by username
+#         response = self.client.get('/admin/examples/ldapuser/?o=1')
+#         self.assertContains(response, "Ldap users")
+#         self.assertContains(response, "foouser")
+#         self.assertContains(response, "2000")
+#
+#         # order by uid
+#         response = self.client.get('/admin/examples/ldapuser/?o=2')
+#         self.assertContains(response, "Ldap users")
+#         self.assertContains(response, "foouser")
+#         self.assertContains(response, "2000")
+#
+#     def test_user_detail(self):
+#         response = self.client.get('/admin/examples/ldapuser/foouser/', follow=True)
+#         self.assertContains(response, "foouser")
+#         self.assertContains(response, "2000")
+#
+#     def test_user_delete(self):
+#         response = self.client.post('/admin/examples/ldapuser/foouser/delete/',
+#                                     {'yes': 'post'})
+#         self.assertRedirects(response, '/admin/examples/ldapuser/')

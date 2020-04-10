@@ -327,6 +327,12 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             return cursor.connection.rename_s(dn, newrdn)
 
     def search_s(self, base, scope, filterstr='(objectClass=*)', attrlist=None):
+
+        # parse_str = filterstr.split(')(')
+        # if parse_str[-1].startswith('dn='):
+        #     filterstr='(objectClass=*)'
+        #     base = parse_str[-1].lower()[3:-2]
+
         with self.cursor() as cursor:
             query_timeout = cursor.connection.timeout
 
