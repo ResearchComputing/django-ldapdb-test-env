@@ -20,12 +20,13 @@ class Model(django.db.models.base.Model):
     """
     Base class for all LDAP models.
     """
-    dn = ldapdb_fields.CharField(max_length=200, primary_key=True)
+    dn = ldapdb_fields.CharField(db_column='dn', max_length=200, primary_key=True)
 
     # meta-data
     base_dn = None
     search_scope = ldap.SCOPE_SUBTREE
     object_classes = ['top']
+    rdn_keys = []
 
     def __init__(self, *args, **kwargs):
         super(Model, self).__init__(*args, **kwargs)
@@ -39,8 +40,9 @@ class Model(django.db.models.base.Model):
         """
         bits = []
         for field in self._meta.fields:
-            if field.db_column and field.primary_key:
-                bits.append("%s=%s" % (field.db_column,
+            if field.db_column and self.rdn_keys:
+                if field.name in self.rdn_keys:
+                    bits.append("%s=%s" % (field.db_column,
                                        getattr(self, field.name)))
         if not len(bits):
             raise Exception("Could not build Distinguished Name")

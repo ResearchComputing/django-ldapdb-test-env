@@ -20,8 +20,18 @@ from django.db.models import Count, Q
 from django.test import TestCase
 from django.utils import timezone
 
-from examples.models import ConcreteGroup, LdapGroup, LdapMultiPKRoom, LdapUser
+from examples.models import ConcreteGroup, LdapGroup, LdapMultiPKRoom, LdapUser, RCLdapUser, RCLdapGroup
 from ldapdb.backends.ldap.compiler import SQLCompiler, query_as_ldap
+
+ucbgroup = ('testucb,ou=UCB,ou=Groups,dc=rc,dc=int,dc=colorado,dc=edu', {
+    'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
+ucb_user = ('uid=dup_user,ou=users,ou=UCB,dc=rc,dc=int,dc=colorado,dc=edu', {
+    'objectClass': ['posixAccount', 'shadowAccount', 'inetOrgPerson'],
+    'cn': ['Bar Test'], 'givenName': ['ucb_user'], 'sn': ['Bar'],
+    'uid': ['dup_user'], 'uidNumber': ['2001'], 'gidNumber': ['1000'],
+    'homeDirectory': ['/home/dup_user'], 'loginShell': ['/bin/bash'],
+    'jpegPhoto': []})
+
 
 groups = ('ou=groups,dc=example,dc=org', {
     'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
@@ -687,6 +697,86 @@ class UserTestCase(BaseTestCase):
             'uid=baruser,ou=users,ou=people,dc=example,dc=org')
 
 
+class RCTestCases(TestCase):
+    # These were mostly used to learn how ldap, slapd, and volatildap work
+
+    groups = ('ou=groups,dc=example,dc=org', {
+        'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
+
+    users = ('ou=users,dc=example,dc=org', {
+        'objectClass': ['top', 'organizationalUnit'], 'ou': ['users']})
+
+    ucbgroup = ('cn=ucbgroup,ou=groups,dc=example,dc=org', {
+        'objectClass': ['posixGroup'], 'memberUid': ['ucb_user'],
+        'gidNumber': ['10001'], 'cn': ['ucbgroup']})
+
+    ucb_user = ('uid=ucb_user,ou=users,dc=example,dc=org', {
+        'objectClass': ['posixAccount', 'shadowAccount', 'inetOrgPerson'],
+        'cn': ['UCB_User Test'], 'givenName': ['ucb_user'], 'sn': ['Bar'],
+        'uid': ['ucb_user'], 'uidNumber': ['2001'], 'gidNumber': ['1000'],
+        'homeDirectory': ['/home/ucb_user'], 'loginShell': ['/bin/bash']})
+
+    directory = dict([groups, ucbgroup, users, ucb_user])
+
+    databases = ['default', 'ldap']
+
+    @classmethod
+    def setUpClass(cls):
+        super(RCTestCases, cls).setUpClass()
+        cls._slapd = volatildap.LdapServer(
+            suffix='dc=example,dc=org',
+            schemas=['core.schema', 'cosine.schema', 'inetorgperson.schema', 'nis.schema'],
+            initial_data=cls.directory)
+
+        settings.DATABASES['ldap']['USER'] = cls._slapd.rootdn
+        settings.DATABASES['ldap']['PASSWORD'] = cls._slapd.rootpw
+        settings.DATABASES['ldap']['NAME'] = cls._slapd.uri
+
+    def setUp(self):
+        # Will start the server, or reset/restart it if already started from a previous test.
+        self._slapd.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._slapd.stop()
+
+
+    def test_create_group(self):
+        RCLdapGroup.objects.create(
+            name='newgroup',
+            gid=1010,
+            members=['ucb_user'],
+        )
+
+        # check group was created
+        new = RCLdapGroup.objects.get(name='newgroup')
+        self.assertEqual(new.name, 'newgroup')
+        self.assertEqual(new.gid, 1010)
+        self.assertCountEqual(new.members, ['ucb_user'])
+
+    def test_create_user(self):
+        RCLdapUser.objects.create(
+            # organization='ucb',
+            first_name='user1 first name',
+            last_name='user1 last name',
+            full_name="user1 test",
+            email='user1@test.com',
+            uid=1001,
+            group=10001,
+            gecos='Test Gecos',
+            home_directory='/home/user1',
+            login_shell='/bin/bash',
+            username='user1',
+        )
+
+        # check group was created
+        new = RCLdapUser.objects.get(username='user1')
+        self.assertEqual(new.uid, 1001)
+        self.assertEqual(new.first_name, 'user1 first name')
+        self.assertEqual(new.last_name, 'user1 last name')
+        self.assertEqual(new.full_name, 'user1 test')
+
+
 class ScopedTestCase(BaseTestCase):
     directory = dict([groups, people, foogroup, contacts])
 
@@ -841,7 +931,7 @@ class AdminTestCase(BaseTestCase):
         self.assertContains(response, "1000")
 
     def test_group_detail(self):
-        response = self.client.get('/admin/examples/ldapgroup/foogroup/', follow=True)
+        response = self.client.get('/admin/examples/ldapgroup/cn%3Dfoogroup%2Cou%3Dgroups%2Cdc%3Dexample%2Cdc%3Dorg/', follow=True)
         self.assertContains(response, "foogroup")
         self.assertContains(response, "1000")
 
@@ -854,7 +944,7 @@ class AdminTestCase(BaseTestCase):
 
     def test_group_delete(self):
         response = self.client.post(
-            '/admin/examples/ldapgroup/foogroup/delete/', {'yes': 'post'})
+            '/admin/examples/ldapgroup/cn%3Dfoogroup%2Cou%3Dgroups%2Cdc%3Dexample%2Cdc%3Dorg/delete/', {'yes': 'post'})
         self.assertRedirects(response, '/admin/examples/ldapgroup/')
         qs = LdapGroup.objects.all()
         self.assertEqual(qs.count(), 1)
@@ -884,11 +974,11 @@ class AdminTestCase(BaseTestCase):
         self.assertContains(response, "2000")
 
     def test_user_detail(self):
-        response = self.client.get('/admin/examples/ldapuser/foouser/', follow=True)
+        response = self.client.get('/admin/examples/ldapuser/uid%3Dfoouser%2Cou%3Dpeople%2Cdc%3Dexample%2Cdc%3Dorg/', follow=True)
         self.assertContains(response, "foouser")
         self.assertContains(response, "2000")
 
     def test_user_delete(self):
-        response = self.client.post('/admin/examples/ldapuser/foouser/delete/',
+        response = self.client.post('/admin/examples/ldapuser/uid%3Dfoouser%2Cou%3Dpeople%2Cdc%3Dexample%2Cdc%3Dorg/delete/',
                                     {'yes': 'post'})
         self.assertRedirects(response, '/admin/examples/ldapuser/')
