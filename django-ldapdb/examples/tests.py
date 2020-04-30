@@ -23,24 +23,15 @@ from django.utils import timezone
 from examples.models import ConcreteGroup, LdapGroup, LdapMultiPKRoom, LdapUser, RCLdapUser, RCLdapGroup
 from ldapdb.backends.ldap.compiler import SQLCompiler, query_as_ldap
 
-#cn=bugtestucb,ou=UCB,ou=Groups,dc=rc,dc=int,dc=colorado,dc=edu
 ucbgroup = ('testucb,ou=UCB,ou=Groups,dc=rc,dc=int,dc=colorado,dc=edu', {
     'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
-csugroup = ('testcsu,ou=CSU,ou=Groups,dc=rc,dc=int,dc=colorado,dc=edu', {
-    'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
-
 ucb_user = ('uid=dup_user,ou=users,ou=UCB,dc=rc,dc=int,dc=colorado,dc=edu', {
     'objectClass': ['posixAccount', 'shadowAccount', 'inetOrgPerson'],
     'cn': ['Bar Test'], 'givenName': ['ucb_user'], 'sn': ['Bar'],
     'uid': ['dup_user'], 'uidNumber': ['2001'], 'gidNumber': ['1000'],
     'homeDirectory': ['/home/dup_user'], 'loginShell': ['/bin/bash'],
     'jpegPhoto': []})
-duplicate_csu_user = ('uid=user,ou=users,ou=CSU,dc=rc,dc=int,dc=colorado,dc=edu', {
-    'objectClass': ['posixAccount', 'shadowAccount', 'inetOrgPerson'],
-    'cn': ['Bar Test'], 'givenName': ['csu_user'], 'sn': ['Bar'],
-    'uid': ['dup_user'], 'uidNumber': ['2002'], 'gidNumber': ['1000'],
-    'homeDirectory': ['/home/dup_user@colostate'], 'loginShell': ['/bin/bash'],
-    'jpegPhoto': []})
+
 
 groups = ('ou=groups,dc=example,dc=org', {
     'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
@@ -707,7 +698,7 @@ class UserTestCase(BaseTestCase):
 
 
 class RCTestCases(TestCase):
-    # directory = dict([groups, foogroup, bargroup, wizgroup, people, foouser])
+    # These were mostly used to learn how ldap, slapd, and volatildap work
 
     groups = ('ou=groups,dc=example,dc=org', {
         'objectClass': ['top', 'organizationalUnit'], 'ou': ['groups']})
@@ -784,7 +775,6 @@ class RCTestCases(TestCase):
         self.assertEqual(new.first_name, 'user1 first name')
         self.assertEqual(new.last_name, 'user1 last name')
         self.assertEqual(new.full_name, 'user1 test')
-
 
 
 class ScopedTestCase(BaseTestCase):
