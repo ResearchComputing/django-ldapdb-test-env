@@ -14,7 +14,8 @@ RUN pip install check-manifest flake8 factory_boy isort tox wheel zest.releaser
 RUN pip install pyasn1 pyasn1-modules pyroma "python-ldap>=3"
 
 # Make sure to have the correct version
-ADD django-ldapdb /opt/django-ldapdb
+RUN mkdir /opt/django-ldapdb
+COPY ./ /opt/django-ldapdb/
 
 WORKDIR /opt/django-ldapdb
 RUN pip install -r requirements_dev.txt
