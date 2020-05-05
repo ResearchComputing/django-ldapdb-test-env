@@ -74,9 +74,6 @@ class Model(django.db.models.base.Model):
 
         create = bool(force_insert or not self.dn)
 
-        print("VARS 77", vars())
-        import pdb; pdb.set_trace()
-
         # Prepare fields
         if update_fields:
             target_fields = [
@@ -132,12 +129,6 @@ class Model(django.db.models.base.Model):
             modlist = []
             for colname, change in sorted(changes.items()):
                 old_value, new_value = change
-
-                #Make offset-aware if datetime
-                if isinstance(old_value, datetime.datetime) and timezone.is_naive(old_value):
-                    old_value = timezone.make_aware(old_value, timezone.get_default_timezone())
-                if isinstance(new_value, datetime.datetime) and timezone.is_naive(new_value):
-                    new_value = timezone.make_aware(new_value, timezone.get_default_timezone())
 
                 if old_value == new_value:
                     continue
