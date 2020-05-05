@@ -39,6 +39,10 @@ class Model(django.db.models.base.Model):
         Build the Relative Distinguished Name for this entry.
         """
         bits = []
+
+        print("VARS 43", vars())
+        import pdb; pdb.set_trace()
+
         for field in self._meta.fields:
             if field.db_column and self.rdn_keys:
                 if field.name in self.rdn_keys:

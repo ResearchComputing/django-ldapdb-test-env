@@ -286,8 +286,8 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         if conn_params['tls']:
             connection.start_tls_s()
 
-        print("VARS 289", vars())
-        import pdb; pdb.set_trace()
+        # print("VARS 289", vars())
+        # import pdb; pdb.set_trace()
 
         connection.simple_bind_s(
             conn_params['bind_dn'],
@@ -349,8 +349,8 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             # Fetch results
             page = 0
 
-            print("VARS 352", vars())
-            import pdb; pdb.set_trace()
+            # print("VARS 352", vars())
+            # import pdb; pdb.set_trace()
 
             while True:
                 msgid = cursor.connection.search_ext(
