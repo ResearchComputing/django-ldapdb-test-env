@@ -69,6 +69,9 @@ class Model(django.db.models.base.Model):
         """
         Saves the current instance.
         """
+        print("Start _save_table")
+        import pdb; pdb.set_trace()
+
         # Connection aliasing
         connection = connections[using]
 
@@ -111,6 +114,8 @@ class Model(django.db.models.base.Model):
 
         # Insertion
         if create:
+            print("In 'if create' of _save_table")
+            import pdb; pdb.set_trace()
             # FIXME(rbarrois): This should be handled through a hidden field.
             hidden_values = [
                 ('objectClass', [obj_class.encode('utf-8') for obj_class in self.object_classes])
@@ -126,6 +131,8 @@ class Model(django.db.models.base.Model):
 
         # Update
         else:
+            print("In 'else' of _save_table which updates value")
+            import pdb; pdb.set_trace()
             modlist = []
             for colname, change in sorted(changes.items()):
                 old_value, new_value = change

@@ -345,17 +345,16 @@ class DateTimeField(LdapFieldMixin, fields.DateTimeField):
     """
 
     def from_ldap(self, value, connection):
+        print("In from_ldap")
+        import pdb; pdb.set_trace()
         if len(value) == 0:
             return None
         return datetime_from_ldap(value[0].decode(connection.charset))
 
     def get_prep_value(self, value):
+        print("In get_prep_value")
+        import pdb; pdb.set_trace()
         value = super(DateTimeField, self).get_prep_value(value)
-        #Make offset-aware if datetime
-        if isinstance(value, datetime.datetime) and timezone.is_naive(value):
-            old_value = timezone.make_aware(old_value, timezone.get_default_timezone())
-        if isinstance(value, datetime.datetime) and timezone.is_naive(value):
-            new_value = timezone.make_aware(new_value, timezone.get_default_timezone())
 
         if not isinstance(value, datetime.date) \
                 and not isinstance(value, datetime.datetime):
