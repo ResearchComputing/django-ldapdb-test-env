@@ -286,6 +286,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         if conn_params['tls']:
             connection.start_tls_s()
 
+        import pdb; pdb.set_trace()
+        print("VARS", vars)
+
         connection.simple_bind_s(
             conn_params['bind_dn'],
             conn_params['bind_pw'],
