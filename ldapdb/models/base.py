@@ -74,6 +74,9 @@ class Model(django.db.models.base.Model):
 
         create = bool(force_insert or not self.dn)
 
+        print("VARS 77", vars())
+        import pdb; pdb.set_trace()
+
         # Prepare fields
         if update_fields:
             target_fields = [
