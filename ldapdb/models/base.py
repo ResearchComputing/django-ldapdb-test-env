@@ -4,12 +4,13 @@
 
 from __future__ import unicode_literals
 
+import datetime
 import logging
-
 import django.db.models
 import ldap
 from django.db import connections, router
 from django.db.models import signals
+from django.utils import timezone
 
 from . import fields as ldapdb_fields
 
@@ -128,6 +129,13 @@ class Model(django.db.models.base.Model):
             modlist = []
             for colname, change in sorted(changes.items()):
                 old_value, new_value = change
+
+                #Make offset-aware if datetime
+                if isinstance(old_value, datetime.datetime) and timezone.is_naive(old_value):
+                    old_value = timezone.make_aware(old_value, timezone.get_default_timezone())
+                if isinstance(new_value, datetime.datetime) and timezone.is_naive(new_value):
+                    new_value = timezone.make_aware(new_value, timezone.get_default_timezone())
+
                 if old_value == new_value:
                     continue
                 modlist.append((
