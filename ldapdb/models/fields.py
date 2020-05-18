@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import ast
 import datetime
 import re
 
@@ -244,6 +245,10 @@ class ListField(LdapFieldMixin, fields.Field):
     def to_python(self, value):
         if not value:
             return []
+        if isinstance(value, list):
+            return value
+        elif isinstance(value, unicode):
+            return ast.literal_eval(value)
         return value
 
 
