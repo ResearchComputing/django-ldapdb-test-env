@@ -247,7 +247,7 @@ class ListField(LdapFieldMixin, fields.Field):
             return []
         if isinstance(value, list):
             return value
-        elif isinstance(value, unicode):
+        elif isinstance(value, str):
             return ast.literal_eval(value)
         return value
 

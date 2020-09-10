@@ -99,7 +99,7 @@ class WhereTestCase(TestCase):
         return '(%s)' % (pattern % tuple(escape_ldap_filter(param) for param in params))
 
     def test_escape(self):
-        self.assertEqual(escape_ldap_filter(u'fôöbàr'), u'fôöbàr')
+        self.assertEqual(escape_ldap_filter('fôöbàr'), 'fôöbàr')
         self.assertEqual(escape_ldap_filter('foo*bar'), 'foo\\2abar')
         self.assertEqual(escape_ldap_filter('foo(bar'), 'foo\\28bar')
         self.assertEqual(escape_ldap_filter('foo)bar'), 'foo\\29bar')
